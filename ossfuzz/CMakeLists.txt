@@ -9,7 +9,7 @@ foreach(PROGRAM IN LISTS FUZZ_PROGRAMS)
   add_executable(${PROGRAM} ${PROGRAM}.c)
   target_sources(${PROGRAM} PRIVATE fuzz_main.c)
   target_include_directories(${PROGRAM} PRIVATE BEFORE ${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR})
-  target_link_libraries(${PROGRAM} zip)
+  target_link_libraries(${PROGRAM} ipf)
 endforeach()
 
 add_custom_target(list-fuzzers

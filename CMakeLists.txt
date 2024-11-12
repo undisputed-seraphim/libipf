@@ -1,16 +1,11 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.17.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-if (${CMAKE_VERSION} VERSION_LESS "3.17.0")
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-compat)
-endif()
 
-project(libzip
-  VERSION 1.11.2
-  LANGUAGES C)
+project(libipf VERSION 1.12.0 LANGUAGES C)
 
-if(NOT libzip_VERSION_PATCH)
-  set(libzip_VERSION_PATCH 0)
+if(NOT libipf_VERSION_PATCH)
+  set(libipf_VERSION_PATCH 0)
 endif()
 
 option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
@@ -198,7 +193,7 @@ int main(int argc, char *argv[]) { }" HAVE_NULLABLE)
 
 test_big_endian(WORDS_BIGENDIAN)
 
-find_package(ZLIB 1.1.2 REQUIRED)
+find_package(ZLIB 1.3 REQUIRED)
 # so developers on systems where zlib is named differently (Windows, sometimes)
 # can override the name used in the pkg-config file
 if (NOT ZLIB_LINK_LIBRARY_NAME)
@@ -350,7 +345,7 @@ set(includedir "\${prefix}/${pc_relative_includedir}")
 if(CMAKE_SYSTEM_NAME MATCHES BSD)
   set(PKG_CONFIG_RPATH "-Wl,-R\${libdir}")
 endif(CMAKE_SYSTEM_NAME MATCHES BSD)
-get_target_property(LIBS_PRIVATE zip LINK_LIBRARIES)
+get_target_property(LIBS_PRIVATE ipf LINK_LIBRARIES)
 foreach(LIB ${LIBS_PRIVATE})
   if(LIB MATCHES "^/")
     get_filename_component(LIB ${LIB} NAME_WE)
@@ -368,9 +363,9 @@ string(REGEX REPLACE "-lOpenSSL::Crypto" "-lssl -lcrypto" LIBS ${LIBS})
 string(REGEX REPLACE "-lZLIB::ZLIB" ${zlib_link_name} LIBS ${LIBS})
 string(REGEX REPLACE "-lGnuTLS::GnuTLS" "-lgnutls" LIBS ${LIBS})
 string(REGEX REPLACE "-lNettle::Nettle" "-lnettle" LIBS ${LIBS})
-configure_file(libzip.pc.in libzip.pc @ONLY)
+configure_file(libipf.pc.in libipf.pc @ONLY)
 if(LIBZIP_DO_INSTALL)
-  install(FILES ${PROJECT_BINARY_DIR}/libzip.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+  install(FILES ${PROJECT_BINARY_DIR}/libipf.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 # fixed size integral types
@@ -482,7 +477,7 @@ write_basic_package_version_file("${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-v
 
 if(LIBZIP_DO_INSTALL)
   configure_package_config_file("${PROJECT_NAME}-config.cmake.in" "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libzip)
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libipf)
 
   # Install Find* modules, they are required by libzip-config.cmake to resolve dependencies
   install(FILES
@@ -494,7 +489,7 @@ if(LIBZIP_DO_INSTALL)
   )
 
   # Add targets to the build-tree export set
-  export(TARGETS zip
+  export(TARGETS ipf
     FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake")
 
   # installation
