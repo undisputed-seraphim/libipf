@@ -126,6 +126,8 @@ set(ZIP_SOURCES
   zip_unchange_data.c
   zip_utf-8.c
   ${CMAKE_CURRENT_BINARY_DIR}/zip_err_str.c
+
+  ipf_string.c
   )
 
 if(WIN32)
@@ -177,13 +179,13 @@ if(HAVE_CRYPTO)
   set(ZIP_SOURCES ${ZIP_SOURCES} zip_winzip_aes.c zip_source_winzip_aes_decode.c zip_source_winzip_aes_encode.c)
 endif()
 
-add_library(zip ${ZIP_SOURCES})
-add_library(libzip::zip ALIAS zip)
-target_link_libraries(zip PRIVATE ${ZIP_LIBRARIES})
-target_include_directories(zip PUBLIC ${ZIP_INCLUDE_DIRS})
+add_library(ipf ${ZIP_SOURCES})
+add_library(libipf::ipf ALIAS ipf)
+target_link_libraries(ipf PRIVATE ${ZIP_LIBRARIES})
+target_include_directories(ipf PUBLIC ${ZIP_INCLUDE_DIRS})
 
 if(WIN32)
-  target_compile_definitions(zip PRIVATE WIN32_LEAN_AND_MEAN)
+  target_compile_definitions(ipf PRIVATE WIN32_LEAN_AND_MEAN)
 endif()
 
 if (BUILD_REGRESS)
@@ -196,17 +198,17 @@ endif()
 
 if(SHARED_LIB_VERSIONNING)
   # MACHO_*_VERSION can be removed when SOVERSION gets increased. Cf #405
-  set_target_properties(zip PROPERTIES VERSION 5.5 SOVERSION 5 MACHO_CURRENT_VERSION 6.5 MACHO_COMPATIBILITY_VERSION 6)
+  set_target_properties(ipf PROPERTIES VERSION 5.5 SOVERSION 5 MACHO_CURRENT_VERSION 6.5 MACHO_COMPATIBILITY_VERSION 6)
 endif()
 
 if (ENABLE_COVERAGE)
-  target_compile_options(zip PRIVATE -coverage)
-  target_link_options(zip PRIVATE -coverage)
+  target_compile_options(ipf PRIVATE -coverage)
+  target_link_options(ipf PRIVATE -coverage)
 endif()
 
 
 if(LIBZIP_DO_INSTALL)
-  install(TARGETS zip
+  install(TARGETS ipf
     EXPORT ${PROJECT_NAME}-targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
