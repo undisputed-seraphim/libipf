@@ -683,4 +683,9 @@ int _zip_unchange(zip_t *, zip_uint64_t, int);
 void _zip_unchange_data(zip_entry_t *);
 int _zip_write(zip_t *za, const void *data, zip_uint64_t length);
 
+// IPF extensions
+
+const zip_uint8_t *_ipf_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip_error_t *error, const char *password);
+const char *_ipf_get_name(zip_t *, zip_uint64_t, zip_flags_t, zip_error_t *);
+
 #endif /* _HAD_ZIPINT_H */

@@ -2,7 +2,7 @@ include(CheckFunctionExists)
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
-add_library(zip
+add_library(ipf
   zip_add.c
   zip_add_dir.c
   zip_add_entry.c
@@ -115,72 +115,74 @@ add_library(zip
   zip_unchange_data.c
   zip_utf-8.c
   ${CMAKE_CURRENT_BINARY_DIR}/zip_err_str.c
+
+  ipf_string.c
   )
-add_library(libzip::zip ALIAS zip)
+add_library(libipf::ipf ALIAS ipf)
 
 if(WIN32)
-  target_compile_definitions(zip PRIVATE WIN32_LEAN_AND_MEAN)
-  target_sources(zip PRIVATE
+  target_compile_definitions(ipf PRIVATE WIN32_LEAN_AND_MEAN)
+  target_sources(ipf PRIVATE
     zip_source_file_win32.c
     zip_source_file_win32_named.c
     zip_source_file_win32_utf16.c
     zip_source_file_win32_utf8.c
     )
   if(CMAKE_SYSTEM_NAME MATCHES WindowsPhone OR CMAKE_SYSTEM_NAME MATCHES WindowsStore)
-    target_sources(zip PRIVATE zip_random_uwp.c)
+    target_sources(ipf PRIVATE zip_random_uwp.c)
   else()
-    target_sources(zip PRIVATE zip_source_file_win32_ansi.c zip_random_win32.c)
-    target_link_libraries(zip PRIVATE advapi32)
+    target_sources(ipf PRIVATE zip_source_file_win32_ansi.c zip_random_win32.c)
+    target_link_libraries(ipf PRIVATE advapi32)
   endif()
 else(WIN32)
-  target_sources(zip PRIVATE
+  target_sources(ipf PRIVATE
     zip_source_file_stdio_named.c
     zip_random_unix.c
     )
 endif(WIN32)
 
 if(HAVE_LIBBZ2)
-  target_sources(zip PRIVATE zip_algorithm_bzip2.c)
-  target_link_libraries(zip PRIVATE BZip2::BZip2)
+  target_sources(ipf PRIVATE zip_algorithm_bzip2.c)
+  target_link_libraries(ipf PRIVATE BZip2::BZip2)
 endif()
 
 if(HAVE_LIBLZMA)
-  target_sources(zip PRIVATE zip_algorithm_xz.c)
-  target_link_libraries(zip PRIVATE LibLZMA::LibLZMA)
+  target_sources(ipf PRIVATE zip_algorithm_xz.c)
+  target_link_libraries(ipf PRIVATE LibLZMA::LibLZMA)
 endif()
 
 if(HAVE_LIBZSTD)
-  target_sources(zip PRIVATE zip_algorithm_zstd.c)
-  target_link_libraries(zip PRIVATE ${zstd_TARGET})
+  target_sources(ipf PRIVATE zip_algorithm_zstd.c)
+  target_link_libraries(ipf PRIVATE ${zstd_TARGET})
 endif()
 
 if(HAVE_COMMONCRYPTO)
-  target_sources(zip PRIVATE zip_crypto_commoncrypto.c)
+  target_sources(ipf PRIVATE zip_crypto_commoncrypto.c)
 elseif(HAVE_WINDOWS_CRYPTO)
-  target_sources(zip PRIVATE zip_crypto_win.c)
-  target_link_libraries(zip PRIVATE bcrypt)
+  target_sources(ipf PRIVATE zip_crypto_win.c)
+  target_link_libraries(ipf PRIVATE bcrypt)
 elseif(HAVE_GNUTLS)
-  target_sources(zip PRIVATE zip_crypto_gnutls.c)
-  target_link_libraries(zip PRIVATE GnuTLS::GnuTLS Nettle::Nettle)
+  target_sources(ipf PRIVATE zip_crypto_gnutls.c)
+  target_link_libraries(ipf PRIVATE GnuTLS::GnuTLS Nettle::Nettle)
 elseif(HAVE_OPENSSL)
-  target_sources(zip PRIVATE zip_crypto_openssl.c)
-  target_link_libraries(zip PRIVATE OpenSSL::Crypto)
+  target_sources(ipf PRIVATE zip_crypto_openssl.c)
+  target_link_libraries(ipf PRIVATE OpenSSL::Crypto)
 elseif(HAVE_MBEDTLS)
-  target_sources(zip PRIVATE zip_crypto_mbedtls.c)
-  target_link_libraries(zip PRIVATE MbedTLS::mbedcrypto)
+  target_sources(ipf PRIVATE zip_crypto_mbedtls.c)
+  target_link_libraries(ipf PRIVATE MbedTLS::mbedcrypto)
 endif()
 
 if(HAVE_CRYPTO)
-  target_sources(zip PRIVATE zip_winzip_aes.c zip_source_winzip_aes_decode.c zip_source_winzip_aes_encode.c)
+  target_sources(ipf PRIVATE zip_winzip_aes.c zip_source_winzip_aes_decode.c zip_source_winzip_aes_encode.c)
 endif()
 
 if(SHARED_LIB_VERSIONNING)
   # MACHO_*_VERSION can be removed when SOVERSION gets increased. Cf #405
-  set_target_properties(zip PROPERTIES VERSION 5.5 SOVERSION 5 MACHO_CURRENT_VERSION 6.5 MACHO_COMPATIBILITY_VERSION 6)
+  set_target_properties(ipf PROPERTIES VERSION 5.5 SOVERSION 5 MACHO_CURRENT_VERSION 6.5 MACHO_COMPATIBILITY_VERSION 6)
 endif()
 
-target_link_libraries(zip PRIVATE ZLIB::ZLIB)
-target_include_directories(zip
+target_link_libraries(ipf PRIVATE ZLIB::ZLIB)
+target_include_directories(ipf
   PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/lib>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
@@ -194,7 +196,7 @@ endif()
 
 
 if(LIBZIP_DO_INSTALL)
-  install(TARGETS zip
+  install(TARGETS ipf
     EXPORT ${PROJECT_NAME}-targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

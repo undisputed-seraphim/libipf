@@ -485,7 +485,7 @@ _zip_dirent_read(zip_dirent_t *zde, zip_source_t *src, zip_buffer_t *buffer, boo
     }
 
     if (filename_len) {
-        zde->filename = _zip_read_string(buffer, src, filename_len, 1, error);
+        zde->filename = _zip_read_string(buffer, src, filename_len, 0, error);
         if (zde->filename == NULL) {
             if (zip_error_code_zip(error) == ZIP_ER_EOF) {
                 zip_error_set(error, ZIP_ER_INCONS, ZIP_ER_DETAIL_VARIABLE_SIZE_OVERFLOW);

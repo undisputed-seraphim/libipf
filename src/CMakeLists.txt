@@ -1,7 +1,7 @@
 check_function_exists(getopt HAVE_GETOPT)
 foreach(PROGRAM zipcmp zipmerge ziptool)
   add_executable(${PROGRAM} ${PROGRAM}.c)
-  target_link_libraries(${PROGRAM} zip)
+  target_link_libraries(${PROGRAM} ipf)
   target_include_directories(${PROGRAM} PRIVATE BEFORE ${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR})
   if(LIBZIP_DO_INSTALL)
     install(TARGETS ${PROGRAM} EXPORT ${PROJECT_NAME}-bin-targets DESTINATION bin)

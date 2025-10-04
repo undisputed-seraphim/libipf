@@ -521,6 +521,9 @@ ZIP_EXTERN int zip_unchange_archive(zip_t *_Nonnull);
 ZIP_EXTERN int zip_compression_method_supported(zip_int32_t method, int compress);
 ZIP_EXTERN int zip_encryption_method_supported(zip_uint16_t method, int encode);
 
+// IPF extensions
+ZIP_EXTERN const char *_Nullable ipf_get_name(zip_t *_Nonnull, zip_uint64_t, zip_flags_t);
+
 #ifdef __cplusplus
 }
 #endif
