@@ -50,7 +50,7 @@ const char *_zip_get_name(zip_t *za, zip_uint64_t idx, zip_flags_t flags, zip_er
         return NULL;
     }
 
-    if ((str = _zip_string_get(de->filename, NULL, flags, error)) == NULL) {
+    if ((str = _ipf_string_get(de->filename, NULL, flags, error, za->default_password)) == NULL) {
         return NULL;
     }
 

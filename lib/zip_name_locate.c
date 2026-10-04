@@ -78,8 +78,8 @@ zip_int64_t _zip_name_locate(zip_t *za, const char *fname, zip_flags_t flags, zi
         }
     }
 
-    if (flags & (ZIP_FL_NOCASE | ZIP_FL_NODIR | ZIP_FL_ENC_RAW | ZIP_FL_ENC_STRICT)) {
-        /* can't use hash table */
+    if ((flags & (ZIP_FL_NOCASE | ZIP_FL_NODIR | ZIP_FL_ENC_RAW | ZIP_FL_ENC_STRICT)) || za->default_password != NULL) {
+        /* can't use hash table: unsupported flags, or file names may be encrypted */
         cmp = (flags & ZIP_FL_NOCASE) ? strcasecmp : strcmp;
 
         for (i = 0; i < za->nentry; i++) {

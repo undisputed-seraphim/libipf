@@ -73,6 +73,11 @@ void _zip_string_free(zip_string_t *s) {
 
     free(s->raw);
     free(s->converted);
+    free(s->decrypted);
+    if (s->decryption_password != NULL) {
+        _zip_crypto_clear(s->decryption_password, strlen(s->decryption_password));
+        free(s->decryption_password);
+    }
     free(s);
 }
 
@@ -176,6 +181,9 @@ zip_string_t *_zip_string_new(const zip_uint8_t *raw, zip_uint16_t length, zip_f
     s->encoding = ZIP_ENCODING_UNKNOWN;
     s->converted = NULL;
     s->converted_length = 0;
+    s->decrypted = NULL;
+    s->decrypted_length = 0;
+    s->decryption_password = NULL;
 
     if (expected_encoding != ZIP_ENCODING_UNKNOWN) {
         if (_zip_guess_encoding(s, expected_encoding) == ZIP_ENCODING_ERROR) {

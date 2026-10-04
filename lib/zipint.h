@@ -460,6 +460,9 @@ struct zip_string {
     enum zip_encoding_type encoding; /* autorecognized encoding */
     zip_uint8_t *converted;          /* autoconverted string */
     zip_uint32_t converted_length;   /* length of converted */
+    zip_uint8_t *decrypted;          /* decrypted string (IPF), or NULL */
+    zip_uint32_t decrypted_length;   /* length of decrypted */
+    char *decryption_password;       /* password used for decrypted, or NULL */
 };
 
 
@@ -711,6 +714,5 @@ int _zip_write(zip_t *za, const void *data, zip_uint64_t length);
 // IPF extensions
 
 const zip_uint8_t *_ipf_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip_error_t *error, const char *password);
-const char *_ipf_get_name(zip_t *, zip_uint64_t, zip_flags_t, zip_error_t *);
 
 #endif /* _HAD_ZIPINT_H */

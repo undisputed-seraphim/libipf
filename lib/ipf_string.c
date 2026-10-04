@@ -47,24 +47,19 @@ update_keys(zip_pkware_keys_t *keys, zip_uint8_t b) {
 }
 
 
-ZIP_EXTERN const char *
-ipf_get_name(zip_t *za, zip_uint64_t idx, zip_flags_t flags) {
-    return _ipf_get_name(za, idx, flags, &za->error);
-}
+/* Does this string already look like a regular (plaintext) name?
+   Encrypted (IPF) names are arbitrary bytes, so they normally fail this check. */
+static bool
+ipf_name_is_plaintext(zip_string_t *string) {
+    zip_string_t view;
 
+    view.raw = string->raw;
+    view.length = string->length;
+    view.encoding = ZIP_ENCODING_UNKNOWN;
+    view.converted = NULL;
+    view.converted_length = 0;
 
-const char *
-_ipf_get_name(zip_t *za, zip_uint64_t idx, zip_flags_t flags, zip_error_t *error) {
-    zip_dirent_t *de;
-    const zip_uint8_t *str;
-
-    if ((de = _zip_get_dirent(za, idx, flags, error)) == NULL)
-        return NULL;
-
-    if ((str = _ipf_string_get(de->filename, NULL, flags, error, za->default_password)) == NULL)
-        return NULL;
-
-    return (const char *)str;
+    return _zip_guess_encoding(&view, ZIP_ENCODING_UTF8_KNOWN) != ZIP_ENCODING_ERROR;
 }
 
 
@@ -72,6 +67,10 @@ const zip_uint8_t *
 _ipf_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip_error_t *error, const char *password) {
     static const zip_uint8_t empty[1] = "";
     zip_pkware_keys_t keys;
+    zip_string_t plain;
+    const zip_uint8_t *result;
+    zip_uint8_t *decrypted, *cached;
+    zip_uint32_t result_length;
     size_t password_len, i;
 
     if (string == NULL) {
@@ -83,33 +82,73 @@ _ipf_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip
     if (password == NULL)
         return _zip_string_get(string, lenp, flags, error);
 
-    /* decrypt first */
+    /* Regular archives opened with a default password for their content still
+       have plaintext names; only decrypt names that are not already valid text. */
+    if (ipf_name_is_plaintext(string))
+        return _zip_string_get(string, lenp, flags, error);
+
+    /* reuse the cached plaintext if it was produced with the same password */
+    if (string->decrypted != NULL && string->decryption_password != NULL && strcmp(string->decryption_password, password) == 0) {
+        if (lenp)
+            *lenp = string->decrypted_length;
+        return string->decrypted;
+    }
+
+    /* decrypt into a scratch buffer so the original ciphertext is preserved */
+    if ((decrypted = (zip_uint8_t *)malloc((size_t)string->length + 1)) == NULL) {
+        zip_error_set(error, ZIP_ER_MEMORY, 0);
+        return NULL;
+    }
+
     _zip_pkware_keys_reset(&keys);
     password_len = strlen(password);
     for (i = 0; i < password_len; ++i) {
-        update_keys(&keys, password[i]);
+        update_keys(&keys, (zip_uint8_t)password[i]);
     }
-    _zip_pkware_decrypt(&keys, string->raw, string->raw, string->length);
+    _zip_pkware_decrypt(&keys, decrypted, string->raw, string->length);
+    decrypted[string->length] = '\0';
 
-    if ((flags & ZIP_FL_ENC_RAW) == 0) {
-        /* start guessing */
-        if (string->encoding == ZIP_ENCODING_UNKNOWN) {
-            /* guess encoding, sets string->encoding */
-            (void)_zip_guess_encoding(string, ZIP_ENCODING_UNKNOWN);
-        }
+    plain.raw = decrypted;
+    plain.length = string->length;
+    plain.encoding = ZIP_ENCODING_UNKNOWN;
+    plain.converted = NULL;
+    plain.converted_length = 0;
 
-        if (((flags & ZIP_FL_ENC_STRICT) && string->encoding != ZIP_ENCODING_ASCII && string->encoding != ZIP_ENCODING_UTF8_KNOWN) || (string->encoding == ZIP_ENCODING_CP437)) {
-            if (string->converted == NULL) {
-                if ((string->converted = _zip_cp437_to_utf8(string->raw, string->length, &string->converted_length, error)) == NULL)
-                    return NULL;
-            }
-            if (lenp)
-                *lenp = string->converted_length;
-            return string->converted;
-        }
+    /* only accept the result if it decrypted to a valid name, otherwise leave it alone */
+    if (_zip_guess_encoding(&plain, ZIP_ENCODING_UTF8_KNOWN) == ZIP_ENCODING_ERROR) {
+        free(decrypted);
+        return _zip_string_get(string, lenp, flags, error);
     }
+
+    result = _zip_string_get(&plain, &result_length, flags, error);
+    if (result == NULL) {
+        free(decrypted);
+        free(plain.converted);
+        return NULL;
+    }
+
+    if ((cached = (zip_uint8_t *)malloc((size_t)result_length + 1)) == NULL) {
+        free(decrypted);
+        free(plain.converted);
+        zip_error_set(error, ZIP_ER_MEMORY, 0);
+        return NULL;
+    }
+    (void)memcpy_s(cached, (size_t)result_length + 1, result, result_length);
+    cached[result_length] = '\0';
+
+    free(decrypted);
+    free(plain.converted);
+
+    free(string->decrypted);
+    if (string->decryption_password != NULL) {
+        _zip_crypto_clear(string->decryption_password, strlen(string->decryption_password));
+        free(string->decryption_password);
+    }
+    string->decrypted = cached;
+    string->decrypted_length = result_length;
+    string->decryption_password = strdup(password);
 
     if (lenp)
-        *lenp = string->length;
-    return string->raw;
+        *lenp = string->decrypted_length;
+    return string->decrypted;
 }
